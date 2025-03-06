@@ -4,8 +4,12 @@ import (
 	"log"
 	"net/http"
 	"sync/atomic"
-	"strconv"
+	"fmt"
 )
+
+type apiConfig struct {
+	fileserverHits atomic.Int32
+}
 
 func main() {
 
@@ -29,8 +33,10 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-type apiConfig struct {
-	fileserverHits atomic.Int32
+func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf("Hits: %d", cfg.fileserverHits.Load())))
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -38,24 +44,4 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 		cfg.fileserverHits.Add(1)
 		next.ServeHTTP(w, r)
 	})
-}
-
-func handlerReadiness(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(http.StatusText(http.StatusOK)))
-}
-
-func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
-	hits := cfg.fileserverHits.Load()
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hits: " + strconv.Itoa(int(hits))))
-}
-
-func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
-	cfg.fileserverHits.Store(0)
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hits reset to 0"))
 }
