@@ -3,7 +3,28 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
+
+func cleanProfanity(text string) string {
+    profaneWords := map[string]bool{
+        "kerfuffle": true,
+        "sharbert":  true,
+        "fornax":    true,
+    }
+	// Split the text into tokens (words)
+	tokens := strings.Split(text, " ")
+
+    for i, token := range tokens {
+        // Check if the token is a profane word (case-insensitive)
+        if profaneWords[strings.ToLower(token)] {
+            tokens[i] = "****" // Replace the word
+        }
+    }
+
+    // Reconstruct the text with spaces and punctuation preserved
+    return strings.Join(tokens, " ")
+}
 
 
 func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
@@ -31,6 +52,9 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cleanedBody := cleanProfanity(params.Body)
+
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]bool{"valid": true})
+	json.NewEncoder(w).Encode(map[string]string{"cleaned_body": cleanedBody})
 }
