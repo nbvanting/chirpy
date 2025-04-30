@@ -1,4 +1,7 @@
 # binaries
 out
 
+# env
+.env
+
 
