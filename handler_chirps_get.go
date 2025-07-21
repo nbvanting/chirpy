@@ -10,7 +10,7 @@ import (
 func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	chirps, err := cfg.db.ListAllChirps(ctx)
+	chirps, err := cfg.db.GetChirps(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "could not fetch chirps"})
