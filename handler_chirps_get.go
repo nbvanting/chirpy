@@ -7,7 +7,7 @@ import (
 )
 
 // handlerListAllChirps handles GET requests to list all chirps.
-func (cfg *apiConfig) handlerListAllChirps(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	chirps, err := cfg.db.ListAllChirps(ctx)
