@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // handlerListAllChirps handles GET requests to list all chirps.
@@ -33,6 +35,38 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 			AuthorID:  c.UserID.String(),
 			CreatedAt: c.CreatedAt.Format(time.RFC3339),
 		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
+}
+
+// handlerChirpRetrieveByID handles GET requests to fetch a single chirp by its ID.
+func (cfg *apiConfig) handlerChirpRetrieveByID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	chirpIDStr := r.PathValue("chirpID")
+
+	chirpUUID, err := uuid.Parse(chirpIDStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid chirp id"})
+		return
+	}
+
+	chirp, err := cfg.db.GetChirp(ctx, chirpUUID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "chirp not found"})
+		return
+	}
+
+	resp := map[string]interface{}{
+		"id":         chirp.ID.String(),
+		"created_at": chirp.CreatedAt.Format(time.RFC3339),
+		"updated_at": chirp.UpdatedAt.Format(time.RFC3339),
+		"body":       chirp.Body,
+		"user_id":    chirp.UserID.String(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
