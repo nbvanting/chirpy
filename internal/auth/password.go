@@ -2,6 +2,7 @@ package auth
 
 import (
 	"time"
+	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
 	"github.com/google/uuid"
@@ -52,4 +53,15 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	}
 
 	return id, nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", nil
+	}
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		return "", jwt.ErrTokenMalformed
+	}
+	return authHeader[7:], nil
 }
