@@ -22,6 +22,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		Token        string `json:"token"`
 		ExpiresAt    string `json:"expires_at"`
 		RefreshToken string `json:"refresh_token"`
+		IsChirpyRed  bool   `json:"is_chirpy_red"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -81,5 +82,6 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		Token:        token,
 		ExpiresAt:    time.Now().Add(accessTokenDuration).Format(time.RFC3339),
 		RefreshToken: refreshToken,
+		IsChirpyRed:  dbUser.IsChirpyRed,
 	})
 }
