@@ -11,6 +11,22 @@ import (
 	"github.com/google/uuid"
 )
 
+const checkChirpOwnership = `-- name: CheckChirpOwnership :one
+SELECT id FROM chirps WHERE id = $1 AND user_id = $2
+`
+
+type CheckChirpOwnershipParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) CheckChirpOwnership(ctx context.Context, arg CheckChirpOwnershipParams) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, checkChirpOwnership, arg.ID, arg.UserID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createChirp = `-- name: CreateChirp :one
 INSERT INTO chirps (id, created_at, updated_at, body, user_id)
 VALUES (
@@ -39,6 +55,20 @@ func (q *Queries) CreateChirp(ctx context.Context, arg CreateChirpParams) (Chirp
 		&i.UserID,
 	)
 	return i, err
+}
+
+const deleteChirp = `-- name: DeleteChirp :exec
+DELETE FROM chirps WHERE id = $1 AND user_id = $2
+`
+
+type DeleteChirpParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteChirp(ctx context.Context, arg DeleteChirpParams) error {
+	_, err := q.db.ExecContext(ctx, deleteChirp, arg.ID, arg.UserID)
+	return err
 }
 
 const getChirp = `-- name: GetChirp :one
