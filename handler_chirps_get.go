@@ -6,13 +6,27 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nbvanting/chirpy/internal/database"
 )
 
 // handlerListAllChirps handles GET requests to list all chirps.
 func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	chirps, err := cfg.db.GetChirps(ctx)
+	authorIDStr := r.URL.Query().Get("author_id")
+	var chirps []database.Chirp
+	var err error
+	if authorIDStr != "" {
+		authorUUID, errParse := uuid.Parse(authorIDStr)
+		if errParse != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "invalid author_id"})
+			return
+		}
+		chirps, err = cfg.db.GetChirpsByAuthor(ctx, authorUUID)
+	} else {
+		chirps, err = cfg.db.GetChirps(ctx)
+	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "could not fetch chirps"})
