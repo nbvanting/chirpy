@@ -14,6 +14,11 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 
 	authorIDStr := r.URL.Query().Get("author_id")
+	sortOrder := r.URL.Query().Get("sort")
+	if sortOrder != "desc" {
+		sortOrder = "asc"
+	}
+
 	var chirps []database.Chirp
 	var err error
 	if authorIDStr != "" {
@@ -23,9 +28,17 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 			json.NewEncoder(w).Encode(map[string]string{"error": "invalid author_id"})
 			return
 		}
-		chirps, err = cfg.db.GetChirpsByAuthor(ctx, authorUUID)
+		if sortOrder == "desc" {
+			chirps, err = cfg.db.GetChirpsByAuthorDesc(ctx, authorUUID)
+		} else {
+			chirps, err = cfg.db.GetChirpsByAuthorAsc(ctx, authorUUID)
+		}
 	} else {
-		chirps, err = cfg.db.GetChirps(ctx)
+		if sortOrder == "desc" {
+			chirps, err = cfg.db.GetChirpsDesc(ctx)
+		} else {
+			chirps, err = cfg.db.GetChirpsAsc(ctx)
+		}
 	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
